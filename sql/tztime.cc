@@ -1922,7 +1922,7 @@ tz_load_from_open_tables(const String *tz_name, TABLE_LIST *tz_tables)
   DBUG_ASSERT(field->key_length() <= sizeof(keybuff));
   field->get_key_image(keybuff,
                        MY_MIN(field->key_length(), sizeof(keybuff)),
-                       Field::itRAW);
+                       field->ptr, Field::itRAW);
   if (table->file->ha_index_init(0, 1))
     goto end;
 
@@ -1955,7 +1955,7 @@ tz_load_from_open_tables(const String *tz_name, TABLE_LIST *tz_tables)
   DBUG_ASSERT(field->key_length() <= sizeof(keybuff));
   field->get_key_image(keybuff,
                        MY_MIN(field->key_length(), sizeof(keybuff)),
-                       Field::itRAW);
+                       field->ptr, Field::itRAW);
   if (table->file->ha_index_init(0, 1))
     goto end;
 
