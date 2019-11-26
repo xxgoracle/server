@@ -7948,3 +7948,9 @@ ER_GALERA_REPLICATION_NOT_SUPPORTED
 ER_LOAD_INFILE_CAPABILITY_DISABLED
         eng "The used command is not allowed because the MariaDB server or client has disabled the local infile capability"
         rum "Comanda folosită nu este permisă deoarece clientul sau serverul MariaDB a dezactivat această capabilitate"
+ER_KEY_CONTAINS_PERIOD_FIELDS
+        eng "Key %`s should not contain period fields in order to make it WITHOUT OVERLAPS"
+ER_PERIOD_WITHOUT_OVERLAPS_PARTITIONED
+        eng "Period WITHOUT OVERLAPS is not implemented for partitioned tables"
+ER_PERIOD_WITHOUT_OVERLAPS_NON_UNIQUE
+        eng "Period WITHOUT OVERLAPS is only allowed for unique keys"
