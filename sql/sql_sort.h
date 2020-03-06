@@ -426,9 +426,9 @@ public:
 
   uint32 get_result_length(uchar *plen)
   {
-    if (!using_addon_fields())
+    if (!m_using_packed_addons)
       return res_length;
-    return get_addon_length(plen);
+    return Addon_fields::read_addon_length(plen);
   }
 
   uint32 get_addon_length(uchar *plen)
