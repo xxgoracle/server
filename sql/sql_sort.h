@@ -325,6 +325,154 @@ private:
 
 
 /**
+PACKED SORT KEYS
+
+Description
+
+In this optimization where we would like the pack the values of the sort key
+inside the sort buffer for each record.
+
+Contents:
+1. Background
+1.1 Implementation details
+2. Solution : Packed Sort Keys
+2.1 Packed key format
+2.2 Which format to use
+3. Special cases
+3.1 Handling very long strings
+3.2 Handling for long binary strings
+3.3 Handling very long strings with Packed sort keys
+4. Sort key columns in addon_fields
+
+1. Background
+Before this optimization of using packed sort keys, filesort() sorted the
+data using mem-comparable keys.
+
+That is, if we wanted to sort by
+
+  ORDER BY col1, col2, ... colN
+then the filesort code would for each row generate one "Sort Key"
+and then sort the rows by their Sort Keys.
+
+The Sort Keys are mem-comparable (that is, are compared by memcmp()) and
+they are of FIXED SIZE. The sort key has the same length regardless of
+what value it represents. This causes INEFFICIENT MEMORY USAGE.
+
+1.1 Implementation details
+
+make_sortkey() is the function that produces a sort key
+from a record.
+
+The function treats Field and Item objects differently.
+
+class Field has:
+
+a) void make_sort_key(uchar *buff, uint length);
+   make_sort_key is a non-virtual function which handles encoding of
+   SQL null values.
+
+b) virtual void sort_string(uchar *buff,uint length)=0;
+    sort_string produces mem-comparable image of the field value
+    for each datatype.
+
+For Items, Type_handler has a virtual function:
+
+  virtual void make_sort_key(uchar *to, Item *item,
+                             const SORT_FIELD_ATTR *sort_field,
+                             Sort_param *param) const= 0;
+  which various datatypes overload.
+
+
+2. SOLUTION: PACKED SORT KEYS
+
+Note that one can have mem-comparable keys are that are not fixed-size.
+MyRocks uses such encoding for example.
+
+However for this optimization it was decided to store the original
+(non-mem-comparable) values instead and use a datatype-aware
+key comparison function.
+
+2.1 Packed key format
+The keys are stored in a new variable-size data format called "packed".
+
+The format is as follows:
+
+  <sort_key_length><packed_value_1><packed_value2> ....... <packed_valueN>
+
+  format for a n-part sort key
+
+<sort_key_length> is the length of the whole key.
+Each packed value is encoded as follows:
+
+  <null_byte=0>  // This is a an SQL NULL
+  [<null_byte=1>] <packed_value>  // this a non-NULL value
+null_byte is present if the field/item is NULLable.
+SQL NULL is encoded as just one NULL-indicator byte. The value itself is omitted.
+
+The format of the packed_value depends on the datatype.
+For "non-packable" datatypes it is just their mem-comparable form, as before.
+
+The "packable" datatypes are currently variable-length strings and the
+packed format for them is (for binary blobs, see a note below):
+
+<length> <string>
+2.2 Which format to use
+
+The advantage of Packed Key Format is potential space savings for
+variable-length fields.
+
+The disadvantages are:
+
+a) It may actually take more space, because of sort_key_length and
+   length fields.
+b) The comparison function is more expensive.
+
+Currently the logic is: use Packed Key Format if we would save 20 or more
+bytes when constructing a sort key from values that have empty string
+for each packable component.
+
+3. SPECIAL CASES
+3.1 HANDLING VERY LONG STRINGS
+the size of sort key part was limited by @@max_sort_length variable.
+It is defined as:
+
+The number of bytes to use when sorting data values. The server uses only the
+first max_sort_length bytes of each value and ignores the rest.
+
+3.2 HANDLING VERY LONG BINARY STRINGS
+Long binary strings receive special treatment. A sort key for the long
+binary string is truncated at max_sort_length bytes like described above,
+but then a "suffix" is appended which contains the total length of the
+value before the truncation.
+
+3.3 HANDLING VERY LONG STRINGS WITH PACKED SORT KEY
+Truncating multi-byte string at N bytes is not safe because one can cut in the
+middle of a character. One is tempted to solve this by discarding the partial
+character but that's also not a good idea as in some collations multiple
+characters may produce one weight (this is called "contraction").
+
+This combination of circumstances:
+
+The string value is very long, so truncation is necessary
+The collation is "complex", so truncation is dangerous
+is deemed to be relatively rare so it was decided to just use
+the non-packed sort keys in this case.
+
+4. SORT KEY COLUMNS IN ADDON FIELDS
+Currently, each sort key column is actually stored twice
+1. as part of the sort key
+2. in the addon_fields
+This made total sense when sort key stored the mem-comparable image
+(from which one cannot restore the original value in general case).
+But since we now store the original value, we could also remove it from the
+addon_fields and further save space. This is still a limitation and needs
+to be fixed later
+
+@see Sort_keys
+
+**/
+
+/**
   The sort record format may use one of two formats for the non-sorted part of
   the record:
 
