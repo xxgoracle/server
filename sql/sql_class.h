@@ -6284,11 +6284,7 @@ struct SORT_FIELD_ATTR
 
   /* Max. length of the original value, in bytes */
   uint original_length;
-  /*
-    FALSE : for packable datatypes like CHAR, VARCHAR and BLOBS
-    TRUE  : otherwise
-  */
-  bool fixed_type;
+  enum Type { FIXED_SIZE, VARIABLE_SIZE } type;
   /*
     TRUE  : if the item or field is NULLABLE
     FALSE : otherwise
@@ -6302,6 +6298,7 @@ struct SORT_FIELD_ATTR
   int compare_packed_varstrings(uchar *a, size_t *a_len,
                                 uchar *b, size_t *b_len);
   bool check_if_packing_possible(THD *thd) const;
+  bool is_variable_sized() { return type == VARIABLE_SIZE; }
 };
 
 

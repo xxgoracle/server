@@ -2212,7 +2212,9 @@ sortlength(THD *thd, Sort_keys *sort_keys, bool *multi_byte_charset,
       sortorder->length= sortorder->field->sort_length();
       sortorder->suffix_length= sortorder->field->sort_suffix_length();
       sortorder->original_length= sortorder->length;
-      sortorder->fixed_type= !field->is_packable();
+      sortorder->type= field->is_packable() ?
+                       SORT_FIELD_ATTR::VARIABLE_SIZE :
+                       SORT_FIELD_ATTR::FIXED_SIZE;
       sortorder->cs= cs;
 
       if (use_strnxfrm((cs=sortorder->field->sort_charset())))
@@ -2220,7 +2222,7 @@ sortlength(THD *thd, Sort_keys *sort_keys, bool *multi_byte_charset,
         *multi_byte_charset= true;
         sortorder->length= (uint) cs->strnxfrmlen(sortorder->length);
       }
-      if (!sortorder->fixed_type && allow_packing_for_keys)
+      if (sortorder->is_variable_sized() && allow_packing_for_keys)
       {
         allow_packing_for_keys= sortorder->check_if_packing_possible(thd);
         sortorder->length_bytes=
@@ -2236,13 +2238,15 @@ sortlength(THD *thd, Sort_keys *sort_keys, bool *multi_byte_charset,
       CHARSET_INFO *cs;
       sortorder->item->type_handler()->sort_length(thd, sortorder->item,
                                                    sortorder);
-      sortorder->fixed_type= !sortorder->item->type_handler()->is_packable();
+      sortorder->type= sortorder->item->type_handler()->is_packable() ?
+                       SORT_FIELD_ATTR::VARIABLE_SIZE :
+                       SORT_FIELD_ATTR::FIXED_SIZE;
       if (use_strnxfrm((cs=sortorder->item->collation.collation)))
       {
         *multi_byte_charset= true;
       }
       sortorder->cs= cs;
-      if (!sortorder->fixed_type && allow_packing_for_keys)
+      if (sortorder->is_variable_sized() && allow_packing_for_keys)
       {
         allow_packing_for_keys= sortorder->check_if_packing_possible(thd);
         sortorder->length_bytes=
@@ -2882,9 +2886,9 @@ int compare_packed_sort_keys(void *sort_param,
   for (SORT_FIELD *sort_field= sort_keys->begin();
        sort_field != sort_keys->end(); sort_field++)
   {
-    retval= sort_field->fixed_type ?
-            sort_field->compare_packed_fixed_size_vals(a, &a_len, b, &b_len):
-            sort_field->compare_packed_varstrings(a, &a_len, b, &b_len);
+    retval= sort_field->is_variable_sized() ?
+            sort_field->compare_packed_varstrings(a, &a_len, b, &b_len) :
+            sort_field->compare_packed_fixed_size_vals(a, &a_len, b, &b_len);
 
     if (retval)
       return sort_field->reverse ? -retval : retval;
