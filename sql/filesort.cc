@@ -2907,8 +2907,24 @@ int compare_packed_sort_keys(void *sort_param,
 
 
 /*
-  TODO varun: add comments here
+  @brief
+    Store a packed string in the buffer
+
+  @param to               buffer
+  @param str              packed string value
+  @param cs               character set
+
+  @details
+    This function writes to the buffer the packed value of a key_part
+    of the sort key.
+
+    The values written to the buffer are in this order
+      - value for null byte
+      - length of the string
+      - value of the string
+      - suffix length (for binary character set)
 */
+
 uint
 SORT_FIELD_ATTR::pack_sort_string(uchar *to, const LEX_CSTRING &str,
                                   CHARSET_INFO *cs) const
@@ -2940,8 +2956,16 @@ SORT_FIELD_ATTR::pack_sort_string(uchar *to, const LEX_CSTRING &str,
 
 
 /*
-  TODO varun: add comments here
+  @brief
+    Create a mem-comparable sort key
+
+  @param  param          sort param structure
+  @param  to             buffer where values are written
+
+  @retval
+    length of the bytes written including the NULL bytes
 */
+
 static uint make_sortkey(Sort_param *param, uchar *to)
 {
   Field *field;
@@ -2979,8 +3003,16 @@ static uint make_sortkey(Sort_param *param, uchar *to)
 
 
 /*
-  TODO varun: add comments here
+  @brief
+    Create a packed sort key
+
+  @param  param          sort param structure
+  @param  to             buffer where values are written
+
+  @retval
+    length of the bytes written including the NULL bytes
 */
+
 static uint make_packed_sortkey(Sort_param *param, uchar *to)
 {
   Field *field;
