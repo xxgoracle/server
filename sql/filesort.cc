@@ -2222,7 +2222,7 @@ sortlength(THD *thd, Sort_keys *sort_keys, bool *multi_byte_charset,
       }
       if (!sortorder->fixed_type && allow_packing_for_keys)
       {
-        allow_packing_for_keys= check_if_packing_possible(thd, cs, sortorder);
+        allow_packing_for_keys= sortorder->check_if_packing_possible(thd);
         sortorder->length_bytes=
           number_storage_requirement(MY_MIN(sortorder->original_length,
                                             thd->variables.max_sort_length));
@@ -2244,7 +2244,7 @@ sortlength(THD *thd, Sort_keys *sort_keys, bool *multi_byte_charset,
       sortorder->cs= cs;
       if (!sortorder->fixed_type && allow_packing_for_keys)
       {
-        allow_packing_for_keys= check_if_packing_possible(thd, cs, sortorder);
+        allow_packing_for_keys= sortorder->check_if_packing_possible(thd);
         sortorder->length_bytes=
           number_storage_requirement(MY_MIN(sortorder->original_length,
                                             thd->variables.max_sort_length));
@@ -2698,15 +2698,15 @@ Type_handler_timestamp_common::make_packed_sort_key(uchar *to, Item *item,
     Reverse the key for DESC clause
   @param to                   buffer where values are written
   @param maybe_null           nullability of a column
-  @param sort_field           Sort field structute
+  @param sort_field           Sort field structure
    @details
      used for mem-comparable sort keys
 */
 
-void reverse_key(uchar *to, bool maybe_null, const SORT_FIELD_ATTR *sort_field)
+void reverse_key(uchar *to, const SORT_FIELD_ATTR *sort_field)
 {
   uint length;
-  if (maybe_null && (to[-1]= !to[-1]))
+  if (sort_field->maybe_null && (to[-1]= !to[-1]))
   {
     to+= sort_field->length; // don't waste the time reversing all 0's
     return;
@@ -2723,21 +2723,19 @@ void reverse_key(uchar *to, bool maybe_null, const SORT_FIELD_ATTR *sort_field)
 /*
   @brief
     Check if packing sort keys is allowed
-  @param cs                 charset for the column
-  @param sortorder          sort field structure
+  @param THD                 thread structure
   @retval
     TRUE  packing allowed
     FALSE packing not allowed
 */
-bool check_if_packing_possible(THD *thd, CHARSET_INFO *cs,
-                               const SORT_FIELD_ATTR *sortorder)
+bool SORT_FIELD_ATTR::check_if_packing_possible(THD *thd) const
 {
   /*
     Packing not allowed when original length is greater than max_sort_length
     and we have a complex collation because cutting a prefix is not safe in
     such a case
   */
-  if (sortorder->original_length > thd->variables.max_sort_length &&
+  if (original_length > thd->variables.max_sort_length &&
       cs->state & MY_CS_NON1TO1)
     return false;
   return true;
@@ -2993,7 +2991,7 @@ static uint make_sortkey(Sort_param *param, uchar *to)
     }
 
     if (sort_field->reverse)
-        reverse_key(to, maybe_null, sort_field);
+      reverse_key(to, sort_field);
     to+= sort_field->length;
   }
 

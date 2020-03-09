@@ -226,9 +226,6 @@ bool filesort_use_addons(TABLE *table, uint sortlength,
 void change_double_for_sort(double nr,uchar *to);
 void store_length(uchar *to, uint length, uint pack_length);
 void
-reverse_key(uchar *to, bool maybe_null,  const SORT_FIELD_ATTR *sort_field);
-bool check_if_packing_possible(THD *thd, CHARSET_INFO *cs,
-                               const SORT_FIELD_ATTR *sort_field);
-
+reverse_key(uchar *to, const SORT_FIELD_ATTR *sort_field);
 
 #endif /* FILESORT_INCLUDED */
