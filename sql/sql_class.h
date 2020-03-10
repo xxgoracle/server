@@ -717,6 +717,7 @@ typedef struct system_variables
   my_bool binlog_annotate_row_events;
   my_bool binlog_direct_non_trans_update;
   my_bool column_compression_zlib_wrap;
+  my_bool opt_binlog_split_alter;
 
   plugin_ref table_plugin;
   plugin_ref tmp_table_plugin;
@@ -2197,6 +2198,13 @@ public:
   rpl_group_info* rgi_fake;
   /* Slave applier execution context */
   rpl_group_info* rgi_slave;
+  bool slave_shutdown;
+  bool direct_commit_alter;
+  //Will be reseted when gtid is written into binlog
+  uint64 gtid_flags3;
+  /* 2 part Alter */
+  ulong start_alter_id;
+
 
   union {
     rpl_io_thread_info *rpl_io_info;
@@ -3074,6 +3082,7 @@ public:
   uint8      password; /* 0, 1 or 2 */
   uint8      failed_com_change_user;
   bool       slave_thread;
+  bool       start_alter_thread;
   bool	     no_errors;
 
   /**
