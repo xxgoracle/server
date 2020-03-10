@@ -9717,7 +9717,7 @@ uint Field_bit::get_key_image(uchar *buff, uint length, const uchar *ptr_arg, im
 {
   if (bit_len)
   {
-    auto *bit_ptr_for_arg= ptr_arg + (bit_ptr - ptr);
+    const uchar *bit_ptr_for_arg= ptr_arg + (bit_ptr - ptr);
     uchar bits= get_rec_bits(bit_ptr_for_arg, bit_ofs, bit_len);
     *buff++= bits;
     length--;

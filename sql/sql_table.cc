@@ -4545,19 +4545,20 @@ static bool append_system_key_parts(THD *thd, HA_CREATE_INFO *create_info,
                                     Alter_info *alter_info, KEY **key_info,
                                     uint key_count)
 {
-  const auto &row_start_field= create_info->vers_info.as_row.start;
-  const auto &row_end_field= create_info->vers_info.as_row.end;
+  const Lex_ident &row_start_field= create_info->vers_info.as_row.start;
+  const Lex_ident &row_end_field= create_info->vers_info.as_row.end;
   DBUG_ASSERT(!create_info->versioned() || (row_start_field && row_end_field));
 
   List_iterator<Key> key_it(alter_info->key_list);
   Key *key= NULL;
-  while ((key=key_it++))
-  {
-    if (key->type != Key::PRIMARY && key->type != Key::UNIQUE)
-      continue;
 
-    if (create_info->versioned())
+  if (create_info->versioned())
+  {
+    while ((key=key_it++))
     {
+      if (key->type != Key::PRIMARY && key->type != Key::UNIQUE)
+        continue;
+
       Key_part_spec *key_part=NULL;
       List_iterator<Key_part_spec> part_it(key->columns);
       while ((key_part=part_it++))
@@ -4569,9 +4570,9 @@ static bool append_system_key_parts(THD *thd, HA_CREATE_INFO *create_info,
       if (!key_part)
         key->columns.push_back(new Key_part_spec(&row_end_field, 0));
     }
+    key_it.rewind();
   }
 
-  key_it.rewind();
   while ((key=key_it++))
   {
     if (key->without_overlaps)
