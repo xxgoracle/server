@@ -3056,7 +3056,7 @@ static bool check_require_secure_transport(sys_var *self, THD *thd, set_var *var
   */
   if (!var->save_result.ulonglong_value)
     return false;
-  if (have_ssl == SHOW_OPTION_YES)
+  if (opt_use_ssl || opt_enable_named_pipe)
     return false;
   /* reject if SSL is disabled: */
   my_error(ER_NO_SECURE_TRANSPORTS_CONFIGURED, MYF(0));
@@ -3067,8 +3067,8 @@ static bool check_require_secure_transport(sys_var *self, THD *thd, set_var *var
 static Sys_var_mybool Sys_require_secure_transport(
   "require_secure_transport",
   "When this option is enabled, connections attempted using insecure "
-  "transport will be rejected. Secure transports are SSL/TLS or "
-  "Unix sockets.",
+  "transport will be rejected. Secure transports are SSL/TLS, "
+  "Unix sockets or named pipes.",
   GLOBAL_VAR(opt_require_secure_transport),
   CMD_LINE(OPT_ARG),
   DEFAULT(FALSE),

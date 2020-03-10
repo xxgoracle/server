@@ -1050,7 +1050,7 @@ The following specify which files/extra groups are read (specified before remain
  --require-secure-transport 
  When this option is enabled, connections attempted using
  insecure transport will be rejected. Secure transports
- are SSL/TLS or Unix sockets.
+ are SSL/TLS, Unix sockets or named pipes.
  --rowid-merge-buff-size=# 
  The size of the buffers used [NOT] IN evaluation via
  partial matching

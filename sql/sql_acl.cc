@@ -13662,9 +13662,17 @@ static bool acl_check_ssl(THD *thd, const ACL_USER *acl_user)
       enum enum_vio_type type= vio_type(vio);
 #ifdef HAVE_OPENSSL
       return type != VIO_TYPE_SSL &&
+#ifndef _WIN32
              type != VIO_TYPE_SOCKET;
 #else
+             type != VIO_TYPE_NAMEDPIPE;
+#endif
+#else
+#ifndef _WIN32
       return type != VIO_TYPE_SOCKET;
+#else
+      return type != VIO_TYPE_NAMEDPIPE;
+#endif
 #endif
     }
     return 0;

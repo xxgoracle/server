@@ -4535,10 +4535,11 @@ static void init_ssl()
 #ifdef _WIN32
   if (opt_require_secure_transport &&
       !opt_use_ssl &&
+      !opt_enable_named_pipe &&
       !opt_bootstrap)
   {
     sql_print_error("Server is started with --require-secure-transport=ON "
-                    "but no secure transport (SSL) are configured.");
+                    "but no secure transport (SSL or PIPE) are configured.");
     unireg_abort(1);
   }
 #endif
