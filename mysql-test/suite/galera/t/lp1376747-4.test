@@ -32,7 +32,7 @@ SHOW CREATE TABLE t1;
 --send FLUSH TABLES t1 WITH READ LOCK;
 
 --connection node_2
---let $wait_condition = SELECT COUNT(*) = 1 FROM INFORMATION_SCHEMA.PROCESSLIST WHERE USER = 'system user' AND STATE LIKE 'committed%';
+--let $wait_condition = SELECT COUNT(*) = 1 FROM INFORMATION_SCHEMA.PROCESSLIST WHERE USER = 'system user' AND STATE LIKE '%committed%';
 --source include/wait_condition.inc
 
 UNLOCK TABLES;
