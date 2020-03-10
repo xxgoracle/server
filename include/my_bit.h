@@ -1,5 +1,5 @@
 /* Copyright (c) 2007, 2011, Oracle and/or its affiliates.
-   Copyright (c) 2009, 2017, MariaDB Corporation.
+   Copyright (c) 2009, 2020, MariaDB Corporation.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -128,7 +128,7 @@ static inline uchar last_byte_mask(uint bits)
   /* Get the number of used bits-1 (0..7) in the last byte */
   unsigned int const used = (bits - 1U) & 7U;
   /* Return bitmask for the significant bits */
-  return ((2U << used) - 1);
+  return (uchar) ((2U << used) - 1);
 }
 
 #ifdef _MSC_VER
