@@ -4577,11 +4577,7 @@ static bool append_system_key_parts(THD *thd, HA_CREATE_INFO *create_info,
   {
     if (key->without_overlaps)
     {
-      if (key->type != Key::PRIMARY && key->type != Key::UNIQUE)
-      {
-        my_error(ER_PERIOD_WITHOUT_OVERLAPS_NON_UNIQUE, MYF(0), key->period.str);
-        return true;
-      }
+      DBUG_ASSERT(key->type == Key::PRIMARY || key->type == Key::UNIQUE);
       if (!create_info->period_info.is_set()
           || !key->period.streq(create_info->period_info.name))
       {
