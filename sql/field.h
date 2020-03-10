@@ -1463,6 +1463,8 @@ public:
     if (null_ptr)
       null_ptr=ADD_TO_PTR(null_ptr,ptr_diff,uchar*);
   }
+  void get_image(uchar *buff, uint length, CHARSET_INFO *cs) const
+  { get_image(buff, length, ptr, cs); }
   virtual void get_image(uchar *buff, uint length,
                          const uchar *ptr_arg, CHARSET_INFO *cs) const
     { memcpy(buff,ptr_arg,length); }
@@ -1496,6 +1498,8 @@ public:
       Number of copied bytes (excluding padded zero bytes -- see above).
   */
 
+  uint get_key_image(uchar *buff, uint length, imagetype type_arg) const
+  { return get_key_image(buff, length, ptr, type_arg); }
   virtual uint get_key_image(uchar *buff, uint length, const uchar *ptr_arg, imagetype type_arg) const
   {
     get_image(buff, length, ptr_arg, &my_charset_bin);
@@ -3994,7 +3998,7 @@ public:
   bool has_charset() const override { return charset() != &my_charset_bin; }
   Field *make_new_field(MEM_ROOT *root, TABLE *new_table, bool keep_type)
     override;
-  uint get_key_image(uchar *buff, uint length, 
+  uint get_key_image(uchar *buff, uint length,
                      const uchar *ptr_arg, imagetype type) const override;
   sql_mode_t value_depends_on_sql_mode() const override;
   sql_mode_t can_handle_sql_mode_dependency_on_store() const override;

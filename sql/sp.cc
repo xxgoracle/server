@@ -1754,10 +1754,9 @@ bool lock_db_routines(THD *thd, const char *db)
     DBUG_RETURN(thd->is_error() || thd->killed);
   }
 
-  auto *field= table->field[MYSQL_PROC_FIELD_DB];
-  field->store(db, strlen(db), system_charset_info);
+  table->field[MYSQL_PROC_FIELD_DB]->store(db, strlen(db), system_charset_info);
   key_len= table->key_info->key_part[0].store_length;
-  field->get_key_image(keybuf, key_len, field->ptr, Field::itRAW);
+  table->field[MYSQL_PROC_FIELD_DB]->get_key_image(keybuf, key_len, Field::itRAW);
   int nxtres= table->file->ha_index_init(0, 1);
   if (nxtres)
   {
@@ -1819,7 +1818,6 @@ sp_drop_db_routines(THD *thd, const char *db)
   TABLE *table;
   int ret;
   uint key_len;
-  Field *field;
   MDL_savepoint mdl_savepoint= thd->mdl_context.mdl_savepoint();
   uchar keybuf[MAX_KEY_LENGTH];
   size_t db_length= strlen(db);
@@ -1831,10 +1829,9 @@ sp_drop_db_routines(THD *thd, const char *db)
   if (!(table= open_proc_table_for_update(thd)))
     goto err;
 
-  field= table->field[MYSQL_PROC_FIELD_DB];
-  field->store(db, db_length, system_charset_info);
+  table->field[MYSQL_PROC_FIELD_DB]->store(db, db_length, system_charset_info);
   key_len= table->key_info->key_part[0].store_length;
-  field->get_key_image(keybuf, key_len, field->ptr, Field::itRAW);
+  table->field[MYSQL_PROC_FIELD_DB]->get_key_image(keybuf, key_len, Field::itRAW);
 
 
   ret= SP_OK;
