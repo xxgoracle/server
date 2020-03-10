@@ -1561,8 +1561,8 @@ generate_primary_key_list(MYSQL *mysql, option_string *engine_stmt)
   {
     primary_keys_number_of= 1;
     primary_keys= (char **)my_malloc(PSI_NOT_INSTRUMENTED,
-                                       sizeof(char *) * primary_keys_number_of,
-                                       MYF(MY_ZEROFILL|MY_FAE|MY_WME));
+                             (size_t)(sizeof(char *) * primary_keys_number_of),
+                             MYF(MY_ZEROFILL|MY_FAE|MY_WME));
     /* Yes, we strdup a const string to simplify the interface */
     primary_keys[0]= my_strdup(PSI_NOT_INSTRUMENTED, "796c4422-1d94-102a-9d6d-00e0812d", MYF(0));
   }
@@ -1590,8 +1590,8 @@ generate_primary_key_list(MYSQL *mysql, option_string *engine_stmt)
         We create the structure and loop and create the items.
       */
       primary_keys= (char **)my_malloc(PSI_NOT_INSTRUMENTED,
-                                       sizeof(char *) * primary_keys_number_of,
-                                       MYF(MY_ZEROFILL|MY_FAE|MY_WME));
+                             (size_t)(sizeof(char *) * primary_keys_number_of),
+                             MYF(MY_ZEROFILL|MY_FAE|MY_WME));
       row= mysql_fetch_row(result);
       for (counter= 0; counter < primary_keys_number_of; 
            counter++, row= mysql_fetch_row(result))
