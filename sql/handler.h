@@ -3004,7 +3004,6 @@ protected:
   ha_rows estimation_rows_to_insert;
   uchar *check_overlaps_buffer;
   handler *lookup_handler;
-  int overlaps_error_key;
 public:
   handlerton *ht;                 /* storage engine of this handler */
   uchar *ref;				/* Pointer to current row */
@@ -3043,6 +3042,7 @@ public:
   */
   bool in_range_check_pushed_down;
 
+  uint lookup_errkey;
   uint errkey;                             /* Last dup key */
   uint key_used_on_scan;
   uint active_index, keyread;
@@ -3203,14 +3203,13 @@ public:
     :table_share(share_arg), table(0),
     estimation_rows_to_insert(0),
     check_overlaps_buffer(NULL), lookup_handler(NULL),
-    overlaps_error_key(-1),
     ht(ht_arg), ref(0), end_range(NULL),
     implicit_emptied(0),
     mark_trx_read_write_done(0),
     check_table_binlog_row_based_done(0),
     check_table_binlog_row_based_result(0),
     row_already_logged(0),
-    in_range_check_pushed_down(FALSE), errkey(-1),
+    in_range_check_pushed_down(FALSE), lookup_errkey(-1), errkey(-1),
     key_used_on_scan(MAX_KEY),
     active_index(MAX_KEY), keyread(MAX_KEY),
     ref_length(sizeof(my_off_t)),

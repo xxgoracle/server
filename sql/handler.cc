@@ -4277,14 +4277,11 @@ uint handler::get_dup_key(int error)
 {
   DBUG_ASSERT(table_share->tmp_table != NO_TMP_TABLE || m_lock_type != F_UNLCK);
   DBUG_ENTER("handler::get_dup_key");
-  if (table->s->long_unique_table && errkey < table->s->keys)
-    DBUG_RETURN(errkey);
-  errkey  = (uint) -1;
-  if (overlaps_error_key != -1)
-  {
-    errkey= (uint)overlaps_error_key;
-    DBUG_RETURN(errkey);
-  }
+
+  if (lookup_errkey != (uint)-1)
+    DBUG_RETURN(errkey= lookup_errkey);
+
+  errkey= (uint)-1;
   if (error == HA_ERR_FOUND_DUPP_KEY ||
       error == HA_ERR_FOREIGN_DUPLICATE_KEY ||
       error == HA_ERR_FOUND_DUPP_UNIQUE || error == HA_ERR_NULL_IN_SPATIAL ||
@@ -6520,7 +6517,6 @@ int handler::ha_external_lock(THD *thd, int lock_type)
     lookup_handler->ha_external_lock(table->in_use, F_UNLCK);
     lookup_handler->close();
     lookup_handler= NULL;
-    overlaps_error_key= -1;
   }
 
   if (MYSQL_HANDLER_RDLOCK_DONE_ENABLED() ||
@@ -6667,7 +6663,7 @@ static int check_duplicate_long_entry_key(TABLE *table, handler *h,
 exit:
   if (error == HA_ERR_FOUND_DUPP_KEY)
   {
-    table->file->errkey= key_no;
+    table->file->lookup_errkey= key_no;
     if (h->ha_table_flags() & HA_DUPLICATE_POS)
     {
       h->position(table->record[0]);
@@ -6689,7 +6685,7 @@ int handler::check_duplicate_long_entries(const uchar *new_rec)
   if (this->inited == RND)
     create_lookup_handler();
   handler *h= lookup_handler ? lookup_handler : table->file;
-  errkey= -1;
+  lookup_errkey= (uint)-1;
   int result;
   for (uint i= 0; i < table->s->keys; i++)
   {
@@ -7112,6 +7108,7 @@ int handler::ha_check_overlaps(const uchar *old_data, const uchar* new_data)
   DBUG_ASSERT(this->ha_end_keyread() == 0);
 
   int error= 0;
+  lookup_errkey= (uint)-1;
 
   for (uint key_nr= 0; key_nr < table_share->keys && !error; key_nr++)
   {
@@ -7190,7 +7187,7 @@ int handler::ha_check_overlaps(const uchar *old_data, const uchar* new_data)
       error= 0;
 
     if (error == HA_ERR_FOUND_DUPP_KEY)
-      overlaps_error_key= key_nr;
+      lookup_errkey= key_nr;
 
     int end_error= handler->ha_end_keyread();
     DBUG_ASSERT(!end_error);
