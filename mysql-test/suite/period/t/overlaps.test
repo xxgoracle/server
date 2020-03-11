@@ -170,9 +170,14 @@ create or replace table t1 (x int, s date, e date, period for p (s, e))
 --error ER_FEATURE_NOT_SUPPORTED_WITH_PARTITIONING
 alter table t1 add primary key (x, p without overlaps);
 
---error ER_PERIOD_WITHOUT_OVERLAPS_NON_UNIQUE
+--error ER_PARSE_ERROR
 create or replace table t2 (x int, s date, e date,
                             period for p (s, e),
                             key(x, p without overlaps));
+
+--error ER_PARSE_ERROR
+create or replace table t2 (x int, s date, e date,
+                            period for p (s, e),
+                            index(x, p without overlaps, x, p without overlaps));
 
 create or replace database test;

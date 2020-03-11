@@ -182,5 +182,9 @@ ERROR HY000: Partitioned tables do not support WITHOUT OVERLAPS
 create or replace table t2 (x int, s date, e date,
 period for p (s, e),
 key(x, p without overlaps));
-ERROR HY000: Only UNIQUE or PRIMARY keys can be WITHOUT OVERLAPS
+ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'without overlaps))' at line 3
+create or replace table t2 (x int, s date, e date,
+period for p (s, e),
+index(x, p without overlaps, x, p without overlaps));
+ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'without overlaps, x, p without overlaps))' at line 3
 create or replace database test;

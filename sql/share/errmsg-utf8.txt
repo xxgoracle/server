@@ -7948,5 +7948,3 @@ ER_LOAD_INFILE_CAPABILITY_DISABLED
         rum "Comanda folosită nu este permisă deoarece clientul sau serverul MariaDB a dezactivat această capabilitate"
 ER_KEY_CONTAINS_PERIOD_FIELDS
         eng "Key %`s cannot explicitly include column %`s"
-ER_PERIOD_WITHOUT_OVERLAPS_NON_UNIQUE
-        eng "Only UNIQUE or PRIMARY keys can be WITHOUT OVERLAPS"
