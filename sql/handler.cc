@@ -7105,9 +7105,7 @@ int handler::ha_check_overlaps(const uchar *old_data, const uchar* new_data)
       position(old_data);
   }
 
-  // Save and later restore this handler's keyread
-  int old_this_keyread= this->keyread;
-  DBUG_ASSERT(this->ha_end_keyread() == 0);
+  DBUG_ASSERT(!keyread_enabled());
 
   int error= 0;
   lookup_errkey= (uint)-1;
@@ -7196,13 +7194,6 @@ int handler::ha_check_overlaps(const uchar *old_data, const uchar* new_data)
     end_error= handler->ha_index_end();
     if (!error && end_error)
       error= end_error;
-  }
-
-  // Restore keyread of this handler, if it was enabled
-  if (old_this_keyread < MAX_KEY)
-  {
-    error= this->ha_start_keyread(old_this_keyread);
-    DBUG_ASSERT(error == 0);
   }
 
   return error;

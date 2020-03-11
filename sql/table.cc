@@ -1504,7 +1504,7 @@ static size_t extra2_read_len(const uchar **extra2, const uchar *extra2_end)
 }
 
 static
-bool fill_unique_extra2(const uchar *extra2, size_t len, LEX_CUSTRING *section)
+bool read_extra2_section_once(const uchar *extra2, size_t len, LEX_CUSTRING *section)
 {
   if (section->str)
     return true;
@@ -1546,29 +1546,29 @@ bool read_extra2(const uchar *frm_image, size_t len, extra2_fields *fields)
           }
           break;
         case EXTRA2_ENGINE_TABLEOPTS:
-          fail= fill_unique_extra2(extra2, length, &fields->options);
+          fail= read_extra2_section_once(extra2, length, &fields->options);
           break;
         case EXTRA2_DEFAULT_PART_ENGINE:
           fields->engine.set((const char*)extra2, length);
           break;
         case EXTRA2_GIS:
-          fail= fill_unique_extra2(extra2, length, &fields->gis);
+          fail= read_extra2_section_once(extra2, length, &fields->gis);
           break;
         case EXTRA2_PERIOD_FOR_SYSTEM_TIME:
-          fail= fill_unique_extra2(extra2, length, &fields->system_period)
+          fail= read_extra2_section_once(extra2, length, &fields->system_period)
                   || length != 2 * frm_fieldno_size;
           break;
         case EXTRA2_FIELD_FLAGS:
-          fail= fill_unique_extra2(extra2, length, &fields->field_flags);
+          fail= read_extra2_section_once(extra2, length, &fields->field_flags);
           break;
         case EXTRA2_APPLICATION_TIME_PERIOD:
-          fail= fill_unique_extra2(extra2, length, &fields->application_period);
+          fail= read_extra2_section_once(extra2, length, &fields->application_period);
           break;
         case EXTRA2_PERIOD_WITHOUT_OVERLAPS:
-          fail= fill_unique_extra2(extra2, length, &fields->without_overlaps);
+          fail= read_extra2_section_once(extra2, length, &fields->without_overlaps);
           break;
         case EXTRA2_FIELD_DATA_TYPE_INFO:
-          fail= fill_unique_extra2(extra2, length, &fields->field_data_type_info);
+          fail= read_extra2_section_once(extra2, length, &fields->field_data_type_info);
           break;
         default:
           /* abort frm parsing if it's an unknown but important extra2 value */
