@@ -3002,12 +3002,12 @@ protected:
   Table_flags cached_table_flags;       /* Set on init() and open() */
 
   ha_rows estimation_rows_to_insert;
-  uchar *check_overlaps_buffer;
   handler *lookup_handler;
 public:
   handlerton *ht;                 /* storage engine of this handler */
   uchar *ref;				/* Pointer to current row */
   uchar *dup_ref;			/* Pointer to duplicate row */
+  uchar *lookup_buffer;
 
   ha_statistics stats;
 
@@ -3202,8 +3202,8 @@ public:
   handler(handlerton *ht_arg, TABLE_SHARE *share_arg)
     :table_share(share_arg), table(0),
     estimation_rows_to_insert(0),
-    check_overlaps_buffer(NULL), lookup_handler(NULL),
-    ht(ht_arg), ref(0), end_range(NULL),
+    lookup_handler(NULL),
+    ht(ht_arg), ref(0), lookup_buffer(NULL), end_range(NULL),
     implicit_emptied(0),
     mark_trx_read_write_done(0),
     check_table_binlog_row_based_done(0),
@@ -4607,6 +4607,8 @@ private:
 private:
   void mark_trx_read_write_internal();
   bool check_table_binlog_row_based_internal(bool binlog_row);
+
+  void alloc_lookup_buffer();
 
 protected:
   /*

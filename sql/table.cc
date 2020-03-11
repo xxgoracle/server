@@ -5268,7 +5268,6 @@ void TABLE::init(THD *thd, TABLE_LIST *tl)
   range_rowid_filter_cost_info_elems= 0;
   range_rowid_filter_cost_info_ptr= NULL;
   range_rowid_filter_cost_info= NULL;
-  check_unique_buf= NULL;
   vers_write= s->versioned;
   quick_condition_rows=0;
   no_cache= false;

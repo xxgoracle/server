@@ -6608,14 +6608,10 @@ static int check_duplicate_long_entry_key(TABLE *table, handler *h,
 
   key_copy(ptr, new_rec, key_info, key_info->key_length, false);
 
-  if (!table->check_unique_buf)
-    table->check_unique_buf= (uchar *)alloc_root(&table->mem_root,
-                                                 table->s->reclength);
-
   result= h->ha_index_init(key_no, 0);
   if (result)
     return result;
-  store_record(table, check_unique_buf);
+  store_record(table, file->lookup_buffer);
   result= h->ha_index_read_map(table->record[0],
                                ptr, HA_WHOLE_KEY, HA_READ_KEY_EXACT);
   if (!result)
@@ -6627,7 +6623,7 @@ static int check_duplicate_long_entry_key(TABLE *table, handler *h,
     uint arg_count= temp->argument_count();
     do
     {
-      my_ptrdiff_t diff= table->check_unique_buf - new_rec;
+      my_ptrdiff_t diff= table->file->lookup_buffer - new_rec;
       is_same= true;
       for (uint j=0; is_same && j < arg_count; j++)
       {
@@ -6670,9 +6666,18 @@ exit:
       memcpy(table->file->dup_ref, h->ref, h->ref_length);
     }
   }
-  restore_record(table, check_unique_buf);
+  restore_record(table, file->lookup_buffer);
   h->ha_index_end();
   return error;
+}
+
+void handler::alloc_lookup_buffer()
+{
+  if (!lookup_buffer)
+    lookup_buffer= (uchar*)alloc_root(&table->mem_root,
+                                      table_share->max_unique_length
+                                      + table_share->null_fields
+                                      + table_share->reclength);
 }
 
 /** @brief
@@ -6685,6 +6690,7 @@ int handler::check_duplicate_long_entries(const uchar *new_rec)
   if (inited != NONE)
     create_lookup_handler();
   handler *h= lookup_handler ? lookup_handler : this;
+  alloc_lookup_buffer();
   lookup_errkey= (uint)-1;
   int result;
   for (uint i= 0; i < table->s->keys; i++)
@@ -7084,13 +7090,9 @@ int handler::ha_check_overlaps(const uchar *old_data, const uchar* new_data)
     return 0;
 
   bool is_update= old_data != NULL;
-  if (!check_overlaps_buffer)
-    check_overlaps_buffer= (uchar*)alloc_root(&table->mem_root,
-                                              table_share->max_unique_length
-                                              + table_share->null_fields
-                                              + table_share->reclength);
-  auto *record_buffer= check_overlaps_buffer + table_share->max_unique_length
-                                             + table_share->null_fields;
+  alloc_lookup_buffer();
+  auto *record_buffer= lookup_buffer + table_share->max_unique_length
+                                     + table_share->null_fields;
   auto *handler= this;
   // handler->inited can be NONE on INSERT
   if (handler->inited != NONE)
@@ -7138,19 +7140,18 @@ int handler::ha_check_overlaps(const uchar *old_data, const uchar* new_data)
     const uint period_field_length= key_info.key_part[key_parts - 1].length;
     const uint key_base_length= key_info.key_length - 2 * period_field_length;
 
-    key_copy(check_overlaps_buffer, new_data, &key_info, 0);
+    key_copy(lookup_buffer, new_data, &key_info, 0);
 
     /* Copy period_start to period_end.
        the value in period_start field is not significant, but anyway let's leave
        it defined to avoid uninitialized memory access
      */
-    memcpy(check_overlaps_buffer + key_base_length,
-           check_overlaps_buffer + key_base_length + period_field_length,
+    memcpy(lookup_buffer + key_base_length,
+           lookup_buffer + key_base_length + period_field_length,
            period_field_length);
 
     /* Find row with period_end > (period_start of new_data) */
-    error = handler->ha_index_read_map(record_buffer,
-                                       check_overlaps_buffer,
+    error = handler->ha_index_read_map(record_buffer, lookup_buffer,
                                        key_part_map((1 << (key_parts - 1)) - 1),
                                        HA_READ_AFTER_KEY);
 
