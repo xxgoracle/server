@@ -8634,11 +8634,31 @@ void TABLE::evaluate_update_default_function()
 int TABLE::check_period_overlaps(const KEY &lhs_key, const KEY &rhs_key,
                                  const uchar *lhs, const uchar *rhs)
 {
-  int cmp_res= key_period_compare_bases(lhs_key, rhs_key, lhs, rhs);
-  if (cmp_res)
-    return cmp_res;
+  uint base_part_nr= lhs_key.user_defined_key_parts - 2;
+  int cmp_res= 0;
+  for (uint part_nr= 0; !cmp_res && part_nr < base_part_nr; part_nr++)
+  {
+    Field *f= lhs_key.key_part[part_nr].field;
+    cmp_res= f->cmp(f->ptr_in_record(lhs),
+                    rhs_key.key_part[part_nr].field->ptr_in_record(rhs));
+    if (cmp_res)
+      return cmp_res;
+  }
 
-  return key_period_compare_periods(lhs_key, rhs_key, lhs, rhs);
+  uint period_start= lhs_key.user_defined_key_parts - 1;
+  uint period_end= lhs_key.user_defined_key_parts - 2;
+
+  const Field *f= lhs_key.key_part[period_start].field;
+  const uchar *ls= lhs_key.key_part[period_start].field->ptr_in_record(lhs);
+  const uchar *rs= rhs_key.key_part[period_start].field->ptr_in_record(rhs);
+  const uchar *le= lhs_key.key_part[period_end  ].field->ptr_in_record(lhs);
+  const uchar *re= rhs_key.key_part[period_end  ].field->ptr_in_record(rhs);
+
+  if (f->cmp(le, rs) <= 0)
+    return -1;
+  if (f->cmp(ls, re) >= 0)
+    return 1;
+  return 0;
 }
 
 void TABLE::vers_update_fields()
