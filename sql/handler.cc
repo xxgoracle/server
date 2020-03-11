@@ -6682,9 +6682,9 @@ exit:
   */
 int handler::check_duplicate_long_entries(const uchar *new_rec)
 {
-  if (this->inited == RND)
+  if (inited != NONE)
     create_lookup_handler();
-  handler *h= lookup_handler ? lookup_handler : table->file;
+  handler *h= lookup_handler ? lookup_handler : this;
   lookup_errkey= (uint)-1;
   int result;
   for (uint i= 0; i < table->s->keys; i++)
@@ -7085,7 +7085,7 @@ int handler::ha_check_overlaps(const uchar *old_data, const uchar* new_data)
 
   bool is_update= old_data != NULL;
   if (!check_overlaps_buffer)
-    check_overlaps_buffer= (uchar*)alloc_root(&table_share->mem_root,
+    check_overlaps_buffer= (uchar*)alloc_root(&table->mem_root,
                                               table_share->max_unique_length
                                               + table_share->null_fields
                                               + table_share->reclength);
